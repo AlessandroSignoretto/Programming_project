@@ -14,6 +14,7 @@ from sklearn.linear_model import Lasso
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
 
+
 st.title('Programming project')
 
 st.header('NYC Airbnb: Price prediction')
@@ -21,7 +22,7 @@ st.header('NYC Airbnb: Price prediction')
 st.subheader('A short explanation of the project topic')
 
 '''**Airbnb** serves as an internet platform that facilitates the organization and provision of accommodations, predominantly homestays, as well 
-as tourism-oriented experiences since its establishment in 2008. <br>
+as tourism-oriented experiences since its establishment in 2008.
 New York City, the most densely populated metropolis in the United States, also ranks among the globe's foremost destinations for both tourism and business endeavors.'''
 
 url = 'https://www.kaggle.com/datasets/dgomonov/new-york-city-airbnb-open-data'
@@ -30,10 +31,13 @@ st.write('The dataset I used can be found on the following link: [link to kaggle
 
 NY_dataset = pd.read_csv("C:\\Users\\alesi\\Desktop\\Programming\\Programming_project\\AB_NYC_2019.csv")
 
+st.write('The number of rows is:', NY_dataset.shape[0])
+st.write('The number of columns is:', NY_dataset.shape[1])
+
 if st.sidebar.checkbox('Have a look at the dataset'):
     st.write('First five rows of the dataset')
     st.write(NY_dataset.head(5))
-    '''Before we perform any analysis, we'll first see what our dataset looks like. These are the variables it contains:
+    '''These are the variables it contains:
 
     - id: - id number that identifies the property
     - name: - Property name
@@ -56,8 +60,27 @@ if st.sidebar.checkbox('Have a look at the dataset'):
 NY_dataset.drop(['name', 'host_name', 'last_review'], axis=1, inplace=True)
 NY_dataset.fillna({'reviews_per_month': 0}, inplace=True)
 
+st.subheader('Outliers')
+
+st.write('Histograms before removing outliers')
+#Histogram before
+selected_columns = st.multiselect('Select columns for histograms', ['price','minimum_nights','number_of_reviews', 'reviews_per_month', 'calculated_host_listings_count','availability_365'])
+
+if selected_columns:
+    # Crea gli istogrammi solo per le colonne selezionate
+    for column in selected_columns:
+        fig, ax = plt.subplots(figsize=(5, 4))
+        NY_dataset[column].hist(ax=ax)
+        plt.title(f'Histogram of {column}')
+        plt.xlabel(column)
+        plt.ylabel('Frequency')
+        st.pyplot(fig)
+else:
+    st.warning('Please select at least one column for histograms.')
+
+
 #Outliers
-# Select columns
+
 NY_dataset_col = NY_dataset[['price', 'minimum_nights','number_of_reviews', 'reviews_per_month','calculated_host_listings_count' ]]
 
 for col in NY_dataset_col:
@@ -72,9 +95,27 @@ z_scores = np.abs(stats.zscore(NY_dataset_col))
 
 # DataFrame without outliers
 NY_dataset_wo = NY_dataset[(z_scores < 2).all(axis=1)]
-NY_dataset_wo.shape
+#NY_dataset_wo.shape
 
 
+st.write('Histograms after removing outliers')
+selected_columns = st.multiselect('Select columns for new histograms', ['price','minimum_nights','number_of_reviews', 'reviews_per_month', 'calculated_host_listings_count','availability_365'])
+
+if selected_columns:
+    # Crea gli istogrammi solo per le colonne selezionate
+    for column in selected_columns:
+        fig, ax = plt.subplots(figsize=(5, 4))
+        NY_dataset_wo[column].hist(ax=ax)
+        plt.title(f'Histogram of {column}')
+        plt.xlabel(column)
+        plt.ylabel('Frequency')
+        st.pyplot(fig)
+else:
+    st.warning('Please select at least one column for histograms.')
+
+
+
+st.subheader('Correlation matrix')
 #Correlation matrix
 st.write('If we would like too see how much the variables are correlated, we should plot the correlation matrix:')
 corr = NY_dataset_wo[['price', 'minimum_nights', 'number_of_reviews','reviews_per_month', 'calculated_host_listings_count', 'availability_365']].corr()
@@ -85,6 +126,14 @@ heatmap.set_yticklabels(heatmap.get_yticklabels(), fontsize=8)
 plt.xticks(rotation=35, ha='right')
 plt.show()
 st.pyplot(plt)
+
+'''From this correlation matrix it can be seen that:
+
+- The variables do not seem to be significantly correlated to each other;
+- Only 'number_of_reviews' and 'reviews_per_month are closely correlated with each other, but is obvious;
+- We can already observe that the variables are not strongly correlated with 'price' which is the target;
+- Continuing with the analysis we will see how this aspect will negatively affect the models.'''
+
 
 #Analysis
 #Regression analysis to predict the price
@@ -127,7 +176,7 @@ st.pyplot(plt)
 
 
 
-
+st.header('Models')
 
 scaler = StandardScaler()
 X_train = scaler.fit_transform(X_train)
