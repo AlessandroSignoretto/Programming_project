@@ -31,11 +31,13 @@ st.write('The dataset I used can be found on the following link: [link to kaggle
 
 NY_dataset = pd.read_csv("C:\\Users\\alesi\\Desktop\\Programming\\Programming_project\\AB_NYC_2019.csv")
 
+pd.set_option('display.float_format', '{:.3f}'.format)
+
 st.write('The number of rows is:', NY_dataset.shape[0])
 st.write('The number of columns is:', NY_dataset.shape[1])
 
 if st.sidebar.checkbox('Have a look at the dataset'):
-    st.write('First five rows of the dataset')
+    st.subheader('First five rows of the dataset')
     st.write(NY_dataset.head(5))
     '''These are the variables it contains:
 
@@ -69,9 +71,9 @@ selected_columns = st.multiselect('Select columns for histograms', ['price','min
 if selected_columns:
     # Crea gli istogrammi solo per le colonne selezionate
     for column in selected_columns:
-        fig, ax = plt.subplots(figsize=(5, 4))
-        NY_dataset[column].hist(ax=ax)
-        plt.title(f'Histogram of {column}')
+        fig, ax = plt.subplots(figsize=(10, 8))
+        NY_dataset[column].hist(ax=ax, bins = 20)
+        plt.title(f'{column}')
         plt.xlabel(column)
         plt.ylabel('Frequency')
         st.pyplot(fig)
@@ -104,22 +106,30 @@ selected_columns = st.multiselect('Select columns for new histograms', ['price',
 if selected_columns:
     # Crea gli istogrammi solo per le colonne selezionate
     for column in selected_columns:
-        fig, ax = plt.subplots(figsize=(5, 4))
-        NY_dataset_wo[column].hist(ax=ax)
-        plt.title(f'Histogram of {column}')
+        fig, ax = plt.subplots(figsize=(10, 8))
+        NY_dataset_wo[column].hist(ax=ax, bins = 20)
+        plt.title(f'{column}')
         plt.xlabel(column)
         plt.ylabel('Frequency')
         st.pyplot(fig)
 else:
     st.warning('Please select at least one column for histograms.')
 
+if st.sidebar.checkbox('Dataset improvment'):
+    st.subheader('Data before removing outliers')
+    st.dataframe(NY_dataset.describe().T)
 
+    st.subheader('Data after removing outliers')
+    st.dataframe(NY_dataset_wo.describe().T)
+
+st.write('The number of rows is:', NY_dataset_wo.shape[0])
+st.write('The number of columns is:', NY_dataset_wo.shape[1])
 
 st.subheader('Correlation matrix')
 #Correlation matrix
 st.write('If we would like too see how much the variables are correlated, we should plot the correlation matrix:')
 corr = NY_dataset_wo[['price', 'minimum_nights', 'number_of_reviews','reviews_per_month', 'calculated_host_listings_count', 'availability_365']].corr()
-plt.figure(figsize=(5,4))
+plt.figure(figsize=(8,6))
 heatmap = sns.heatmap(corr, cmap='RdBu', fmt='.3f', annot=True)
 heatmap.set_xticklabels(heatmap.get_xticklabels(), fontsize=8)
 heatmap.set_yticklabels(heatmap.get_yticklabels(), fontsize=8)
@@ -128,11 +138,144 @@ plt.show()
 st.pyplot(plt)
 
 '''From this correlation matrix it can be seen that:
-
 - The variables do not seem to be significantly correlated to each other;
 - Only 'number_of_reviews' and 'reviews_per_month are closely correlated with each other, but is obvious;
 - We can already observe that the variables are not strongly correlated with 'price' which is the target;
 - Continuing with the analysis we will see how this aspect will negatively affect the models.'''
+
+st.header('Plots')
+
+st.subheader('Price')
+
+plt.figure(figsize = (10,6))
+NY_dataset_wo.price.value_counts().iloc[:10].plot(kind = 'bar') # The command generates a bar graph of the 10 most frequent values in the 'price' column.
+st.pyplot(plt)
+
+st.write('- More then 1750 airbnbs have a price of 150 dollars and 100 dollars each respectively.')
+st.write("- Around 1350 airbnbs have circa 50 dollars price.")
+st.write("- The average price is around 133 dollars.")
+st.write("- 50% of data has price greater than 100 dollars")
+st.write('- The the most expensive airbnb has 625 dollars as price. ')
+
+st.subheader('Minimum nights')
+
+plt.figure(figsize = (10,6))
+NY_dataset_wo.minimum_nights.value_counts().iloc[:10].plot(kind = 'bar')
+st.pyplot(plt)
+
+st.write('Almost 10k people stay 1 night in airbnb and 3.5k have choosen to stay a month.')
+
+st.subheader('Number of reviews')
+
+plt.figure(figsize = (10,6))
+NY_dataset_wo.number_of_reviews.value_counts().iloc[:10].plot(kind = 'bar')
+st.pyplot(plt)
+
+st.write('We can see that many airbnbs do not have reviews.')
+
+st.subheader('Availability')
+
+value_counts = NY_dataset_wo.availability_365.value_counts()
+value_0 = value_counts.iloc[0] # I take the value 0 because is the max
+other_values_sum = sum(value_counts.values) - value_0 # take the sum of all the other values
+
+values = [value_0, other_values_sum]
+labels = [f'Value 0 ({value_0})', f'Other Values ({other_values_sum})']
+plt.figure(figsize=(10, 6))
+plt.pie(values, labels=labels, autopct='%1.1f%%', colors=['blue', 'gray'])
+plt.axis('equal')
+plt.title("0 days and all the others")
+st.pyplot(plt)
+
+st.write('It is instersting that 40.3% of all airbnbs have 0 days availability.') 
+'''This data might seem unusual, but upon further investigation, it can be understood that Airbnb accommodations can also be booked for extended periods, likely for work or study purposes, and are paid as monthly rents.'''
+
+st.header('Neighborhood group')
+
+# Calculating the number of Airbnbs for each boroughs
+neighbourhood = NY_dataset_wo.neighbourhood_group.value_counts()
+
+# Plotting the pie plot of room type
+plt.figure(figsize=(10, 6))
+plt.pie(neighbourhood, labels = neighbourhood.index, colors = ['darkorange', 'blue', 'green', 'darkred', 'purple'], autopct='%1.1f%%', startangle = 140)
+plt.axis('equal')
+plt.title('Boroughs')
+st.pyplot(plt)
+
+st.write('Amount of airbns per boroughs:')
+'''- Manhattan: 18,085'''
+'''- Brooklyn: 18,084'''
+'''- Queens: 4,862'''
+'''- Bronx: 955'''
+'''- Staten Island: 321'''
+
+st.header('Room type')
+
+# Calculating the number of rooms for each room type
+room_type = NY_dataset_wo.room_type.value_counts()
+
+# Plotting the pie plot of room type
+plt.figure(figsize=(10, 6))
+plt.pie(room_type, labels = room_type.index, colors = ['yellow', 'darkcyan', 'pink'], autopct='%1.1f%%', startangle = 140)
+plt.axis('equal')
+plt.title('Room type')
+st.pyplot(plt)
+
+st.write('Amount of airbns per room type:')
+'''- Entire home/apt: 21,365'''
+'''- Private room: 19,878'''
+'''- Shared room: 1,064'''
+
+st.header('Average price per room type')
+
+# Calculating the average price per room type
+type_price = NY_dataset_wo.groupby('room_type').price.mean().sort_values(ascending=False)
+
+# Plottingthe average price per room type
+plt.figure(figsize=(10, 6))
+ax = sns.barplot(x = type_price.index, y = type_price, palette = ['yellow', 'darkcyan', 'pink']) 
+ax.set_title('Average Price per Room Type')
+ax.tick_params(bottom=False, top=False, left=False, right=False)
+ax.set_ylabel('$', fontsize=12)
+st.pyplot(plt)
+
+st.write('Average price per room type:')
+'''- Entire home/apt: 182.843'''
+'''- Private room: 82.826'''
+'''- Shared room: 64.235'''
+
+st.header('Average price per borough')
+
+# Calculating the average price per borough
+price_boroughs = NY_dataset_wo.groupby('neighbourhood_group').price.mean().sort_values(ascending=False)
+
+# Plotting the average price per borough
+plt.figure(figsize =(10,6))
+ax = sns.barplot(x = price_boroughs.index, y = price_boroughs, palette=['darkorange', 'blue', 'green', 'purple', 'darkred', ]) 
+ax.set_title('Average Price per Borough')
+ax.tick_params(bottom=False, top=False, left=False, right=False)
+ax.set_ylabel('$', fontsize=12)
+st.pyplot(plt)
+
+st.write('Average price per borough:')
+'''- Manhattan: 164.706'''
+'''- Brooklyn: 114.301'''
+'''- Queens: 95.724'''
+'''- Staten Island: 94.801'''
+'''- Bronx: 83.403'''
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 #Analysis
@@ -153,6 +296,7 @@ X_train, X_test, y_train, y_test =  train_test_split(X,y,test_size = 0.2, random
 
 
 #GRAFICO NEW YORK
+st.header('Room type location')
 # Lista dei room_type disponibili nel tuo dataset
 available_room_types = NY_dataset['room_type'].unique()
 
@@ -162,7 +306,7 @@ selected_room_types = st.sidebar.multiselect('Select room types to show', availa
 
 # Creazione del grafico scatterplot
 title = 'Room type location per Neighbourhood Group'
-plt.figure(figsize=(7, 4))
+plt.figure(figsize=(8, 6))
 
 # Filtra il DataFrame in base ai room_type selezionati
 filtered_df = NY_dataset[NY_dataset['room_type'].isin(selected_room_types)]
