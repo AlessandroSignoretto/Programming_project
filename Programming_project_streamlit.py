@@ -25,6 +25,15 @@ st.subheader('A short explanation of the project topic')
 as tourism-oriented experiences since its establishment in 2008.
 New York City, the most densely populated metropolis in the United States, also ranks among the globe's foremost destinations for both tourism and business endeavors.'''
 
+'''In this project, I analyse an extensive database about variables related to Airbnb listings in the city of New York. 
+The primary objective is to develop a predictive model for estimating the nightly prices of these accommodations. The project unfolds in several distinct stages:
+- Firstly, an in-depth analysis of the database is conducted. This includes data cleansing procedures, involving the removal of not relevant columns and the completing of missing data points.
+- Secondly, the exploration extends to the construction of insightful visualizations. Graphical representations are made to examine the behavior of different variables and assess their correlations with the target price column.
+- Lastly, the dataset is split into both training and test sets. These subsets serve for the creation and assessment of regression models. 
+Through these models, the aim is to derive predictive insights that contribute to the accurate estimation of the prices.'''
+
+st.header('Dataset')
+
 url = 'https://www.kaggle.com/datasets/dgomonov/new-york-city-airbnb-open-data'
 
 st.write('The dataset I used can be found on the following link: [link to kaggle](' +url+')')
@@ -62,7 +71,7 @@ if st.sidebar.checkbox('Have a look at the dataset'):
 NY_dataset.drop(['name', 'host_name', 'last_review'], axis=1, inplace=True)
 NY_dataset.fillna({'reviews_per_month': 0}, inplace=True)
 
-st.subheader('Outliers')
+st.header('Outliers')
 
 st.write('Histograms before removing outliers')
 #Histogram before
@@ -80,9 +89,7 @@ if selected_columns:
 else:
     st.warning('Please select at least one column for histograms.')
 
-
-#Outliers
-
+#Ouliers
 NY_dataset_col = NY_dataset[['price', 'minimum_nights','number_of_reviews', 'reviews_per_month','calculated_host_listings_count' ]]
 
 for col in NY_dataset_col:
@@ -125,7 +132,7 @@ if st.sidebar.checkbox('Dataset improvement'):
 st.write('The number of rows is:', NY_dataset_wo.shape[0])
 st.write('The number of columns is:', NY_dataset_wo.shape[1])
 
-st.subheader('Correlation matrix')
+st.header('Correlation matrix')
 #Correlation matrix
 st.write('If we would like too see how much the variables are correlated, we should plot the correlation matrix:')
 corr = NY_dataset_wo[['price', 'minimum_nights', 'number_of_reviews','reviews_per_month', 'calculated_host_listings_count', 'availability_365']].corr()
@@ -360,10 +367,6 @@ y_low = y.loc[(NY_final['price'] < 249)]
 
 X_train_low, X_test_low, y_train_low, y_test_low =  train_test_split(X_low, y_low,test_size = 0.2, random_state= 42)
 
-
-
-
-
 with st.expander('Models to predict the price'):
 
     st.subheader('$R^{2}$, $RMSE$ $and$ $plot$ $error$')
@@ -395,6 +398,13 @@ with st.expander('Models to predict the price'):
             df1 = error_diff.head(20)
             df1.plot(kind='bar', figsize=(7, 4))
             plt.grid(linewidth='0.5', color='black')
+            st.pyplot(plt)
+
+            plt.figure(figsize=(7,4))
+            sns.regplot(y=y_pred, x=y_test, line_kws={"color": "red"}, color='blue')
+            plt.title('Evaluated predictions', fontsize=15)
+            plt.xlabel('Predicted values')
+            plt.ylabel('Real values')
             st.pyplot(plt)
             pass
 
@@ -428,6 +438,30 @@ with st.expander('Models to predict the price'):
             df1.plot(kind='bar',figsize=(7,4))
             plt.grid(linewidth = '0.5', color = 'black')
             st.pyplot(plt)
-        
+
+            plt.figure(figsize=(7,4))
+            sns.regplot(y=y_pred_low, x=y_test_low, line_kws={"color": "red"}, color='blue')
+            plt.title('Evaluated predictions', fontsize=15)
+            plt.xlabel('Predicted values')
+            plt.ylabel('Real values')
+            st.pyplot(plt)
+pass
+
+'''The properties in the dataset exhibit substantial variations in prices.'''
+
+'''Dividing the dataset into different price categories proves valuable for analysis purposes.'''
+
+'''The most significant variables for predicting prices are:'''
+'''- Neighborhood_group'''
+'''- Type_of_room'''
+
+'''The models aimed at predicting prices have shown not noticeable performance.'''
+'''- The highest achieved model score is 0.52.'''
+
+'''Predictions tend to be more accurate for properties priced under $249, which constitutes around 90% of the dataset.'''
+
+'''The dataset suffers from inadequate data quality, with a notable challenge being the uneven distribution of features. This has posed difficulties in constructing an effective predictive model.'''
+
+'''Exploring deeper into the underlying problem and augmenting the dataset with additional valuable features that demonstrate stronger correlations with the target variable could potentially lead to improved price predictions.'''
 
 
