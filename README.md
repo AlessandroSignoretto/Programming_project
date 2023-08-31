@@ -9,6 +9,7 @@ The primary objective is to develop a predictive model for estimating the nightl
 - Secondly, the exploration extends to the construction of insightful visualizations. Graphical representations are made to examine the behavior of different variables and assess their correlations with the target price column.
 - Lastly, the dataset is split into both training and test sets. These subsets serve for the creation and assessment of regression models. 
 Through these models, the aim is to derive predictive insights that contribute to the accurate estimation of the prices.'''
+
  '''These are the variables it contains:
 - id: - id number that identifies the property
 - name: - Property name
