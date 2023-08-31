@@ -115,7 +115,7 @@ if selected_columns:
 else:
     st.warning('Please select at least one column for histograms.')
 
-if st.sidebar.checkbox('Dataset improvment'):
+if st.sidebar.checkbox('Dataset improvement'):
     st.subheader('Data before removing outliers')
     st.dataframe(NY_dataset.describe().T)
 
@@ -155,7 +155,7 @@ st.write('- More then 1750 airbnbs have a price of 150 dollars and 100 dollars e
 st.write("- Around 1350 airbnbs have circa 50 dollars price.")
 st.write("- The average price is around 133 dollars.")
 st.write("- 50% of data has price greater than 100 dollars")
-st.write('- The the most expensive airbnb has 625 dollars as price. ')
+st.write('- The most expensive airbnb has 625 dollars as price. ')
 
 st.subheader('Minimum nights')
 
@@ -264,38 +264,15 @@ st.write('Average price per borough:')
 '''- Staten Island: 94.801'''
 '''- Bronx: 83.403'''
 
+st.header('Price and type of room for borought')
 
+plt.figure(figsize=(10, 6))
+ax = sns.barplot(x=NY_dataset_wo.neighbourhood_group, y=NY_dataset_wo.price, hue=NY_dataset_wo.room_type, errorbar=None, edgecolor='white', palette = ['blue', 'darkorange', 'green'] )
+ax.set_title('Price and type of room for borought')
+st.pyplot(plt)
 
+'''As we can see, Manhattan is the most expensive neighbourhood and the price of entire home/apt is more than any other room type.'''
 
-
-
-
-
-
-
-
-
-
-
-
-#Analysis
-#Regression analysis to predict the price
-NY_final = NY_dataset_wo.drop(['id','host_id','latitude','longitude','neighbourhood'], axis = 1, inplace = False)
-x = NY_final.iloc[:,[0,1,3,4,5,6,7]]
-y = NY_final['price']
-
-#One-Hot Encoding
-X = pd.get_dummies(NY_final.iloc[:,[0,1,3,4,5,6,7]], prefix=['neighbourhood_group', 'room_type'], drop_first=True) 
-#Drop_first = True; indicates that one of the categories of each categorical variable must be left out to avoid the so-called "dummy variable trap". 
-#Dummy variable trap occurs when dummy variables are highly correlated.
-
-#Splitting the dataset into test and training data
-X_train, X_test, y_train, y_test =  train_test_split(X,y,test_size = 0.2, random_state= 42)
-
-
-
-
-#GRAFICO NEW YORK
 st.header('Room type location')
 # Lista dei room_type disponibili nel tuo dataset
 available_room_types = NY_dataset['room_type'].unique()
@@ -317,10 +294,62 @@ sns.scatterplot(data=filtered_df, x='longitude', y='latitude', hue='room_type', 
 # Visualizza il grafico
 st.pyplot(plt)
 
+st.header('Neighbourhood Group Location')
 
+plt.figure(figsize=(10, 6))
+ax = sns.scatterplot(x=NY_dataset_wo.longitude,y=NY_dataset_wo.latitude, hue=NY_dataset_wo.neighbourhood_group, palette = 'bright')
+ax.set_title('Neighbourhood Group Location')
+st.pyplot(plt)
 
+'''With all these plots, the conclusions are:'''
+'''- Entire home/apt and private room are the most common room types;'''
+'''- Entire home/apt are usually more expensive than private and shared rooms;'''
+'''- Over 85% of the rooms are located in Manhattan and Brooklyn, which are also the most expensive regions, especially Manhattan.'''
 
-st.header('Models')
+if st.sidebar.checkbox('Last phase of data preparation'):
+    st.subheader('The code of the passages')
+    with st.echo():
+        NY_final = NY_dataset_wo.drop(['id','host_id','latitude','longitude','neighbourhood'], axis = 1, inplace = False)
+        x = NY_final.iloc[:,[0,1,3,4,5,6,7]]
+        y = NY_final['price']
+        #I dropped these columns as they are not useful for the analysis. 
+        #Specifically, knowing the property's ID and owner's ID might be essential if I were to create a database, but not for analyzing the Airbnb price per night.
+        #As for the other columns, I consider them to be too specific, and the 'neighborhood_group' (218 different neighbothood) column, in my opinion, is adequate for the analysis.
+
+        #One-Hot Encoding
+        X = pd.get_dummies(NY_final.iloc[:,[0,1,3,4,5,6,7]], prefix=['neighbourhood_group', 'room_type'], drop_first=True) 
+        #Drop_first = True; indicates that one of the categories of each categorical variable must be left out to avoid the so-called "dummy variable trap". 
+        #Dummy variable trap occurs when dummy variables are highly correlated.
+        
+
+        #Splitting the dataset into test and training data
+        X_train, X_test, y_train, y_test =  train_test_split(X,y,test_size = 0.2, random_state= 42)
+
+        scaler = StandardScaler()
+        X_train = scaler.fit_transform(X_train)
+        X_test = scaler.fit_transform(X_test)
+
+        X_low = X.loc[(NY_dataset_wo['price'] < 249)]
+        y_low = y.loc[(NY_final['price'] < 249)]
+
+        #Splitting the dataset into test and training data
+        X_train_low, X_test_low, y_train_low, y_test_low =  train_test_split(X_low, y_low,test_size = 0.2, random_state= 42)
+
+    st.write('I encoded the values of the ''room_type'' and ''neighborhood_group'' columns because they contain categorical data, rather than numerical data.') 
+    st.write('To achieve this, I utilized the get_dummies method from the Pandas library.')
+    st.write('Get_dummies is a method that convert categorical variable into dummy/indicator variables.') 
+    st.write('Each variable is converted in as many 0/1 variables as there are different values. Columns in the output are each named after a value.')
+    st.write('You have to pay attention when you are encoding such data, as it is not always possible to assign values from 0 to n, where n represents the number of different categories in the column.')
+    st.write('To achieve this, there needs to be some form of ordinal relationship among the data, which is not present in this case.') 
+pass
+
+NY_final = NY_dataset_wo.drop(['id','host_id','latitude','longitude','neighbourhood'], axis = 1, inplace = False)
+x = NY_final.iloc[:,[0,1,3,4,5,6,7]]
+y = NY_final['price']
+
+X = pd.get_dummies(NY_final.iloc[:,[0,1,3,4,5,6,7]], prefix=['neighbourhood_group', 'room_type'], drop_first=True) 
+        
+X_train, X_test, y_train, y_test =  train_test_split(X,y,test_size = 0.2, random_state= 42)
 
 scaler = StandardScaler()
 X_train = scaler.fit_transform(X_train)
@@ -329,8 +358,10 @@ X_test = scaler.fit_transform(X_test)
 X_low = X.loc[(NY_dataset_wo['price'] < 249)]
 y_low = y.loc[(NY_final['price'] < 249)]
 
-#Splitting the dataset into test and training data
 X_train_low, X_test_low, y_train_low, y_test_low =  train_test_split(X_low, y_low,test_size = 0.2, random_state= 42)
+
+
+
 
 
 with st.expander('Models to predict the price'):
